@@ -38,6 +38,16 @@ public class Film implements Serializable {
 		this.id = id;
 	}
 
+    public Film(String titre, int annee, int duree, String synopsis, Genre genre, Participant realisateur) {
+        this();
+        this.titre = titre;
+        this.annee = annee;
+        this.duree = duree;
+        this.synopsis = synopsis;
+        this.genre = genre;
+        this.realisateur = realisateur;
+    }
+
 
 
     public long getId() {

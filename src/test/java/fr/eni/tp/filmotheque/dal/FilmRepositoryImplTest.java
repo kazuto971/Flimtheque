@@ -1,6 +1,8 @@
 package fr.eni.tp.filmotheque.dal;
 
 import fr.eni.tp.filmotheque.bo.Film;
+import fr.eni.tp.filmotheque.bo.Genre;
+import fr.eni.tp.filmotheque.bo.Participant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +20,8 @@ public class FilmRepositoryImplTest {
 
     @Autowired
     private FilmRepositoryImpl repository;
+    @Autowired
+    private FilmRepositoryImpl filmRepositoryImpl;
 
 
     @Test
@@ -39,6 +43,30 @@ public class FilmRepositoryImplTest {
         assertEquals(106, film.getDuree());
     }
 
-    
+    @Test
+    void testSaveFilm() {
+
+        Genre genreAction = new Genre(4, "Action");
+        Participant spielberg = new Participant(1, "Steven", "Spielberg");
+
+        // Constructeur complet qui appelle this() pour initialiser les listes
+        Film film = new Film(
+                "Ready Player One",
+                2018,
+                140,
+                "Dans un futur proche, un adolescent doit résoudre des énigmes dans un monde virtuel pour hériter d'une fortune.",
+                genreAction,
+                spielberg
+        );
+
+        // Ajout d’acteurs
+        film.getActeurs().add(new Participant(5, "Jeff", "Goldblum"));
+
+        Film filmEnregistre = filmRepositoryImpl.saveFilm(film);
+
+        assertNotNull(filmEnregistre);
+        assertEquals("Ready Player One", filmEnregistre.getTitre());
+
+    }
 
 }

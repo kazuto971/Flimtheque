@@ -5,10 +5,14 @@ import fr.eni.tp.filmotheque.bo.Genre;
 import fr.eni.tp.filmotheque.bo.Participant;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 @Repository
@@ -79,8 +83,37 @@ public class FilmRepositoryImpl implements FilmRepository {
 
     @Override
     public Film saveFilm(Film film) {
-        return null;
+        String sql = "INSERT INTO films (titre, annee, duree, synopsis, genreId, realisateurId) VALUES (?, ?, ?, ?, ?, ?)";
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, film.getTitre());
+            ps.setInt(2, film.getAnnee());
+            ps.setInt(3, film.getDuree());
+            ps.setString(4, film.getSynopsis());
+            ps.setLong(5, film.getGenre().getId());
+            ps.setLong(6, film.getRealisateur().getId());
+            return ps;
+        }, keyHolder);
+
+        film.setId(keyHolder.getKey().longValue());
+
+        // Sauvegarde des acteurs si besoin
+        if (film.getActeurs() != null) {
+            for (Participant acteur : film.getActeurs()) {
+                jdbcTemplate.update(
+                        "INSERT INTO acteurs (filmId, participantId) VALUES (?, ?)",
+                        film.getId(), acteur.getId()
+                );
+            }
+        }
+
+        return film;
     }
+
+
 
 
     class FilmRowMapper implements RowMapper<Film> {

@@ -1,6 +1,7 @@
 package fr.eni.tp.filmotheque.controller;
 
 import fr.eni.tp.filmotheque.bll.FilmService;
+import fr.eni.tp.filmotheque.bll.GenreService;
 import fr.eni.tp.filmotheque.bo.Film;
 import fr.eni.tp.filmotheque.controller.dto.FilmDto;
 import fr.eni.tp.filmotheque.bo.Genre;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -18,46 +18,35 @@ import java.util.List;
 @Controller
 public class FilmController {
 
-    private FilmService filmService;
+    private final FilmService filmService;
+    private final GenreService genreService;
 
-    public FilmController(FilmService filmService) {
+    public FilmController(FilmService filmService, GenreService genreService) {
         this.filmService = filmService;
+        this.genreService = genreService;
     }
 
-
     @GetMapping("/films/detail")
-    public String afficherUnFilm(@RequestParam(name="id") long identifiant, Model model) {
-
-        Film film = this.filmService.consulterFilmParId(identifiant);
-        System.out.println(film);
-
+    public String afficherUnFilm(@RequestParam(name = "id") long identifiant, Model model) {
+        Film film = this.filmService.findFilmById(identifiant);
         model.addAttribute("film", film);
         return "view-film-detail";
     }
 
-
     @GetMapping("/films")
     public String afficherFilms(Model model) {
-
-        List<Film> films = this.filmService.consulterFilms();
-        for (Film film : films) {
-            System.out.println(film);
-        }
-
+        List<Film> films = this.filmService.findAllFilms();
         model.addAttribute("films", films);
-
         return "view-films";
     }
 
-    @GetMapping("/films/creer")
+    /*@GetMapping("/films/creer")
     public String afficherFormulaire(Model model) {
         model.addAttribute("film", new FilmDto());
-        model.addAttribute("genres", filmService.consulterGenres());
+        model.addAttribute("genres", genreService.findAllGenres());
         model.addAttribute("participants", filmService.consulterParticipants());
         return "view-film-form";
     }
-
-
 
     @PostMapping("/films/creer")
     public String creerFilm(
@@ -66,7 +55,7 @@ public class FilmController {
             Model model) {
 
         if (result.hasErrors()) {
-            model.addAttribute("genres", filmService.consulterGenres());
+            model.addAttribute("genres", genreService.findAllGenres());
             model.addAttribute("participants", filmService.consulterParticipants());
             return "view-film-form";
         }
@@ -76,11 +65,14 @@ public class FilmController {
         film.setAnnee(filmDto.getAnnee());
         film.setDuree(filmDto.getDuree());
         film.setSynopsis(filmDto.getSynopsis());
-        film.setGenre(filmService.consulterGenreParId(filmDto.getGenreId()));
+        film.setGenre(genreService.findGenreById(filmDto.getGenreId()));
 
         Participant realisateur = filmService.consulterParticipantParId(filmDto.getRealisateurId());
         film.setRealisateur(realisateur);
 
+        if (film.getActeurs() == null) {
+            film.setActeurs(new java.util.ArrayList<>());
+        }
         for (Long id : filmDto.getActeurIds()) {
             Participant acteur = filmService.consulterParticipantParId(id);
             if (acteur != null) {
@@ -88,19 +80,12 @@ public class FilmController {
             }
         }
 
-        filmService.creerFilm(film);
+        filmService.saveFilm(film); // Nouvelle méthode BLL
         return "redirect:/films";
-    }
-
-
-
-
+    }*/
 
     @ModelAttribute("genresEnSession")
-    public List<Genre> chargerGenres(){
-        System.out.println("Chargement en Session - GENRES");
-        return filmService.consulterGenres();
+    public List<Genre> chargerGenres() {
+        return genreService.findAllGenres();
     }
-
-
 }
