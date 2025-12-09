@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TP ENI</title>
+    <link rel="stylesheet" th:href="@{/css/general.css}">
+    <link rel="stylesheet" th:href="@{/css/tp-form.css}">
+    <link rel="icon" th:href="@{/images/logoENI.png}">
+</head>
+<body>
+<!-- Navbar -->
+<header>
+    <h1 id="nav-title">
+        <a th:href="@{/}">Filmothèque</a>
+    </h1>
+    <nav>
+        <ul>
+            <li><a th:href="@{/films}">Films</a></li>
+            <li><a th:href="@{/films/creer}">Creer</a></li>
+        </ul>
+    </nav>
+</header>
+<main>
+    <form >
+        <h1>Création d'un film [En cours de construction]</h1>
+        <ul class="flex-outer">
+            <li>
+                <label for="inputGenre">Genre : </label>
+                <select id="inputGenre">
+                    <option data-th-each="genre : ${genresEnSession}" data-th-value="${genre.id}" data-th-text="${genre.titre}"></option>
+                </select>
+            </li>
+        </ul>
+    </form>
+
+    <h1>Créer un film </h1>
+
+    <form action="#" th:action="@{/films/creer}" th:object="${film}" method="post">
+
+        <label>Titre</label>
+        <input type="text" th:field="*{titre}">
+        <p th:if="${#fields.hasErrors('titre')}" th:errors="*{titre}"></p>
+
+        <label>Année</label>
+        <input type="number" th:field="*{annee}">
+        <p th:if="${#fields.hasErrors('annee')}" th:errors="*{annee}"></p>
+
+        <label>Durée</label>
+        <input type="number" th:field="*{duree}">
+        <p th:if="${#fields.hasErrors('duree')}" th:errors="*{duree}"></p>
+
+        <label>Synopsis</label>
+        <textarea th:field="*{synopsis}"></textarea>
+        <p th:if="${#fields.hasErrors('synopsis')}" th:errors="*{synopsis}"></p>
+
+        <label>Genre</label>
+        <select th:field="*{genreId}">
+            <option value="">-- Sélectionner un genre --</option>
+            <option th:each="g : ${genres}"
+                    th:value="${g.id}"
+                    th:text="${g.titre}"></option>
+        </select>
+        <p th:if="${#fields.hasErrors('genreId')}" th:errors="*{genreId}"></p>
+
+        <label>Réalisateur</label>
+        <select th:field="*{realisateurId}">
+            <option value="">-- Sélectionner un réalisateur --</option>
+            <option th:each="p : ${participants}"
+                    th:value="${p.id}"
+                    th:text="${p.nom} + ' ' + ${p.prenom}"></option>
+        </select>
+        <p th:if="${#fields.hasErrors('realisateurId')}" th:errors="*{realisateurId}"></p>
+
+        <label>Acteurs</label>
+        <select multiple="multiple" th:field="*{acteurIds}">
+            <option th:each="p : ${participants}"
+                    th:value="${p.id}"
+                    th:text="${p.nom} + ' ' + ${p.prenom}"></option>
+        </select>
+        <p th:if="${#fields.hasErrors('acteurIds')}" th:errors="*{acteurIds}"></p>
+
+        <button type="submit">Créer</button>
+    </form>
+
+
+
+
+
+</main>
+
+</body>
+</html>
