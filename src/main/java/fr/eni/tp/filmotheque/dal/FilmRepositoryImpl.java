@@ -26,59 +26,74 @@ public class FilmRepositoryImpl implements FilmRepository {
 
     @Override
     public List<Film> findAllFilms() {
-
         String sql = """
-            SELECT
-                f.id AS film_id,
-                f.titre AS film_titre,
-                f.annee,
-                f.duree,
-                f.synopsis,
-                
-                g.id AS genre_id,
-                g.titre AS genre_titre,
+        SELECT f.id AS film_id, f.titre AS film_titre, f.annee, f.duree, f.synopsis,
+               g.id AS genre_id, g.titre AS genre_titre,
+               r.id AS realisateur_id, r.prenom AS realisateur_prenom, r.nom AS realisateur_nom
+        FROM films f
+        JOIN genres g ON f.genreId = g.id
+        JOIN participants r ON f.realisateurId = r.id
+    """;
 
-                r.id AS realisateur_id,
-                r.prenom AS realisateur_prenom,
-                r.nom AS realisateur_nom
+        List<Film> films = jdbcTemplate.query(sql, new FilmRowMapper());
 
-            FROM films f
-            JOIN genres g ON f.genreId = g.id
-            JOIN participants r ON f.realisateurId = r.id
-            """;
+        // Pour chaque film, on récupère les acteurs
+        for (Film film : films) {
+            List<Participant> acteurs = findParticipantsByFilmId(film.getId());
+            film.setActeurs(acteurs);
+        }
 
-        return jdbcTemplate.query(sql, new FilmRowMapper());
+        return films;
     }
 
 
     @Override
     public Film findFilmById(long id) {
-
         String sql = """
-            SELECT
-                f.id AS film_id,
-                f.titre AS film_titre,
-                f.annee,
-                f.duree,
-                f.synopsis,
-                
-                g.id AS genre_id,
-                g.titre AS genre_titre,
-
-                r.id AS realisateur_id,
-                r.prenom AS realisateur_prenom,
-                r.nom AS realisateur_nom
-
-            FROM films f
-            JOIN genres g ON f.genreId = g.id
-            JOIN participants r ON f.realisateurId = r.id
-            WHERE f.id = ?
-            """;
+        SELECT f.id AS film_id, f.titre AS film_titre, f.annee, f.duree, f.synopsis,
+               g.id AS genre_id, g.titre AS genre_titre,
+               r.id AS realisateur_id, r.prenom AS realisateur_prenom, r.nom AS realisateur_nom
+        FROM films f
+        JOIN genres g ON f.genreId = g.id
+        JOIN participants r ON f.realisateurId = r.id
+        WHERE f.id = ?
+    """;
 
         List<Film> films = jdbcTemplate.query(sql, new FilmRowMapper(), id);
 
-        return films.isEmpty() ? null : films.get(0);
+        if (films.isEmpty()) {
+            return null;
+        }
+
+        Film film = films.get(0);
+
+        // Récupérer les acteurs séparément
+        List<Participant> acteurs = findParticipantsByFilmId(film.getId());
+        film.setActeurs(acteurs);
+
+        return film;
     }
+
+
+    @Override
+    public List<Participant> findParticipantsByFilmId(long filmId) {
+        String sql = """
+        SELECT p.id AS acteur_id, p.prenom AS acteur_prenom, p.nom AS acteur_nom
+        FROM participants p
+        JOIN acteurs a ON p.id = a.participantId
+        WHERE a.filmId = ?
+    """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            Participant acteur = new Participant();
+            acteur.setId(rs.getInt("acteur_id"));
+            acteur.setPrenom(rs.getString("acteur_prenom"));
+            acteur.setNom(rs.getString("acteur_nom"));
+            return acteur;
+        }, filmId);
+    }
+
+
 
 
     @Override
@@ -117,7 +132,6 @@ public class FilmRepositoryImpl implements FilmRepository {
 
 
     class FilmRowMapper implements RowMapper<Film> {
-
         @Override
         public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
             Film film = new Film();
@@ -141,4 +155,5 @@ public class FilmRepositoryImpl implements FilmRepository {
             return film;
         }
     }
+
 }

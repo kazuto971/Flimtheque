@@ -2,6 +2,7 @@ package fr.eni.tp.filmotheque.controller;
 
 import fr.eni.tp.filmotheque.bll.FilmService;
 import fr.eni.tp.filmotheque.bll.GenreService;
+import fr.eni.tp.filmotheque.bll.ParticipantService;
 import fr.eni.tp.filmotheque.bo.Film;
 import fr.eni.tp.filmotheque.controller.dto.FilmDto;
 import fr.eni.tp.filmotheque.bo.Genre;
@@ -20,10 +21,12 @@ public class FilmController {
 
     private final FilmService filmService;
     private final GenreService genreService;
+    private final ParticipantService participantService;
 
-    public FilmController(FilmService filmService, GenreService genreService) {
+    public FilmController(FilmService filmService, GenreService genreService, ParticipantService participantService) {
         this.filmService = filmService;
         this.genreService = genreService;
+        this.participantService = participantService;
     }
 
     @GetMapping("/films/detail")
@@ -40,11 +43,11 @@ public class FilmController {
         return "view-films";
     }
 
-    /*@GetMapping("/films/creer")
+    @GetMapping("/films/creer")
     public String afficherFormulaire(Model model) {
         model.addAttribute("film", new FilmDto());
         model.addAttribute("genres", genreService.findAllGenres());
-        model.addAttribute("participants", filmService.consulterParticipants());
+        model.addAttribute("participants", participantService.findAllParticipants());
         return "view-film-form";
     }
 
@@ -56,7 +59,7 @@ public class FilmController {
 
         if (result.hasErrors()) {
             model.addAttribute("genres", genreService.findAllGenres());
-            model.addAttribute("participants", filmService.consulterParticipants());
+            model.addAttribute("participants", participantService.findAllParticipants());
             return "view-film-form";
         }
 
@@ -67,14 +70,14 @@ public class FilmController {
         film.setSynopsis(filmDto.getSynopsis());
         film.setGenre(genreService.findGenreById(filmDto.getGenreId()));
 
-        Participant realisateur = filmService.consulterParticipantParId(filmDto.getRealisateurId());
+        Participant realisateur = participantService.findParticipantById(filmDto.getRealisateurId());
         film.setRealisateur(realisateur);
 
         if (film.getActeurs() == null) {
             film.setActeurs(new java.util.ArrayList<>());
         }
         for (Long id : filmDto.getActeurIds()) {
-            Participant acteur = filmService.consulterParticipantParId(id);
+            Participant acteur = participantService.findParticipantById(id);
             if (acteur != null) {
                 film.getActeurs().add(acteur);
             }
@@ -82,7 +85,7 @@ public class FilmController {
 
         filmService.saveFilm(film); // Nouvelle méthode BLL
         return "redirect:/films";
-    }*/
+    }
 
     @ModelAttribute("genresEnSession")
     public List<Genre> chargerGenres() {
