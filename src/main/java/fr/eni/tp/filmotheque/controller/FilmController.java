@@ -29,6 +29,11 @@ public class FilmController {
         this.participantService = participantService;
     }
 
+    @GetMapping({"/","/accueil"})
+    public String afficheAccueil() {
+        return "accueil";
+    }
+
     @GetMapping("/films/detail")
     public String afficherUnFilm(@RequestParam(name = "id") long identifiant, Model model) {
         Film film = this.filmService.findFilmById(identifiant);

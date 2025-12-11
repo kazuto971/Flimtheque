@@ -69,3 +69,32 @@ INSERT INTO acteurs (filmId, participantId) VALUES (3, 8);
 -- Bienvenue chez les Ch'tis : acteurs id 3 et 9
 INSERT INTO acteurs (filmId, participantId) VALUES (4, 3);
 INSERT INTO acteurs (filmId, participantId) VALUES (4, 9);
+
+drop table Membres;
+
+CREATE TABLE Membres(    id INT IDENTITY CONSTRAINT PK_Membres PRIMARY KEY,
+                         prenom VARCHAR(50) NOT NULL,
+                         nom VARCHAR(50) NOT NULL,
+                         pseudo VARCHAR(50) NOT NULL UNIQUE,
+                         motDePasse VARCHAR(100) NOT NULL,
+                         admin BIT NOT NULL);
+
+DELETE FROM Membres;
+
+INSERT INTO Membres (prenom, nom, pseudo, motDePasse, admin)
+VALUES (
+           'Baille',
+           'Anne-Lise',
+           'abaille@campus-eni.fr',
+           '{bcrypt}$2a$10$0HBkXwD023v72Lkig9itfu9AEZjEimXu48hkh8Iher7.BpJJv.glu',
+           0
+       );
+
+INSERT INTO Membres (prenom, nom, pseudo, motDePasse, admin)
+VALUES (
+           'Joseph',
+           'Pascal',
+           'joseph@campus-eni.fr',
+           '{bcrypt}$2a$10$mL/8uJL4m2AqsnNjngQ1cekapJ2LVz103vw4yuQrG8SsTML4E1GIG',
+           1
+       );

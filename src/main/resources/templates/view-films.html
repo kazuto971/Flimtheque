@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="UTF-8">
 <title>TP ENI</title>
@@ -13,7 +13,17 @@
         <h1 id="nav-title">
             <a th:href="@{/}">Filmothèque</a>
         </h1>
+
+        <div sec:authorize="isAuthenticated()">
+            Connecté en tant que <span sec:authentication="name"></span> —
+            <a href="/logout">Déconnexion</a>
+        </div>
         <nav>
+            <div>
+                <div sec:authorize="!isAuthenticated()">
+                    <a href="/login">Connexion</a>
+                </div>
+            </div>
             <ul>
                 <li><a th:href="@{/films}">Films</a></li>
                 <li><a th:href="@{/films/creer}">Creer</a></li>
