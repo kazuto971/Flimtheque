@@ -3,6 +3,9 @@ package fr.eni.tp.filmotheque.bll;
 import fr.eni.tp.filmotheque.bo.Film;
 import fr.eni.tp.filmotheque.dal.FilmRepository;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -22,9 +25,18 @@ public class FilmServiceImpl implements FilmService{
     }
 
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FilmServiceImpl.class);
+
     @Override
     public Film findFilmById(long id) {
-        return filmRepository.findFilmById(id);
+        LOGGER.info("Recherche du film ID : {}", id);
+        Film film = filmRepository.findFilmById(id);
+
+        if (film == null) {
+            LOGGER.warn("Aucun film trouvé pour ID : {}", id);
+        }
+
+        return film;
     }
 
     @Override

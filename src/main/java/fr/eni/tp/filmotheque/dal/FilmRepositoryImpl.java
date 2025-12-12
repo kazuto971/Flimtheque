@@ -5,6 +5,9 @@ import fr.eni.tp.filmotheque.bo.Genre;
 import fr.eni.tp.filmotheque.bo.Participant;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -14,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class FilmRepositoryImpl implements FilmRepository {
@@ -27,13 +31,11 @@ public class FilmRepositoryImpl implements FilmRepository {
     @Override
     public List<Film> findAllFilms() {
         String sql = """
-        SELECT f.id AS film_id, f.titre AS film_titre, f.annee, f.duree, f.synopsis,
-               g.id AS genre_id, g.titre AS genre_titre,
-               r.id AS realisateur_id, r.prenom AS realisateur_prenom, r.nom AS realisateur_nom
-        FROM films f
-        JOIN genres g ON f.genreId = g.id
-        JOIN participants r ON f.realisateurId = r.id
-    """;
+        SELECT film_id, film_titre, annee, duree, synopsis,
+               genre_id, genre_titre,
+               realisateur_id, realisateur_prenom, realisateur_nom
+        FROM v_Films
+        """;
 
         List<Film> films = jdbcTemplate.query(sql, new FilmRowMapper());
 
@@ -96,32 +98,30 @@ public class FilmRepositoryImpl implements FilmRepository {
 
 
 
-    @Override
     public Film saveFilm(Film film) {
-        String sql = "INSERT INTO films (titre, annee, duree, synopsis, genreId, realisateurId) VALUES (?, ?, ?, ?, ?, ?)";
+        SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("sp_AjoutFilm");
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        SqlParameterSource in = new MapSqlParameterSource()
+                .addValue("titre", film.getTitre())
+                .addValue("annee", film.getAnnee())
+                .addValue("duree", film.getDuree())
+                .addValue("synopsis", film.getSynopsis())
+                .addValue("genreId", film.getGenre().getId())
+                .addValue("realisateurId", film.getRealisateur().getId());
 
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, film.getTitre());
-            ps.setInt(2, film.getAnnee());
-            ps.setInt(3, film.getDuree());
-            ps.setString(4, film.getSynopsis());
-            ps.setLong(5, film.getGenre().getId());
-            ps.setLong(6, film.getRealisateur().getId());
-            return ps;
-        }, keyHolder);
+        Map<String, Object> out = jdbcCall.execute(in);
+        // Selon driver, la clé peut être "nouvelId" ou "nouvelid" — vérifie le map
+        Number idNum = (Number) out.get("nouvelId"); // ou out.get("nouvelid")
+        if (idNum != null) {
+            film.setId(idNum.longValue());
+        }
 
-        film.setId(keyHolder.getKey().longValue());
-
-        // Sauvegarde des acteurs si besoin
+        // insertion des acteurs (si nécessaire)
         if (film.getActeurs() != null) {
             for (Participant acteur : film.getActeurs()) {
-                jdbcTemplate.update(
-                        "INSERT INTO acteurs (filmId, participantId) VALUES (?, ?)",
-                        film.getId(), acteur.getId()
-                );
+                jdbcTemplate.update("INSERT INTO acteurs (filmId, participantId) VALUES (?, ?)",
+                        film.getId(), acteur.getId());
             }
         }
 
